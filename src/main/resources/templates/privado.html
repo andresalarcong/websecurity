@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Contenido Privado</title>
+</head>
+<body>
+<h1>Contenido Privado</h1>
+<p>Bienvenido, <span sec:authentication="name"></span>!</p>
+<p>Este es un contenido que solo pueden ver los usuarios autenticados.</p>
+<form th:action="@{/logout}" method="post">
+    <input type="submit" value="Cerrar Sesión"/>
+</form>
+<a th:href="@{/}">Volver al inicio</a>
+</body>
+</html>
