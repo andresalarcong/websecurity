@@ -1,11 +1,21 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Contenido Público</title>
+    <meta charset="UTF-8">
+    <title th:text="#{public.content}">Contenido Público</title>
 </head>
 <body>
-<h1>Contenido Público</h1>
-<p>Este es un contenido que todos pueden ver.</p>
-<a th:href="@{/}">Volver al inicio</a>
+<h1 th:text="#{public.content}">Contenido Público</h1>
+
+<!-- Selector de idioma -->
+<form method="get" th:action="@{/publico}">
+    <select name="lang" onchange="this.form.submit()">
+        <option value="en" th:selected="${#locale.language == 'en'}">English</option>
+        <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+    </select>
+</form>
+
+<a th:href="@{/(lang=${#locale.language})}" th:text="#{go.home}">Volver al inicio</a>
 </body>
 </html>

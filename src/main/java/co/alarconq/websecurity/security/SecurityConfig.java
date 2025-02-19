@@ -14,16 +14,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "/publico").permitAll()
+                        .requestMatchers("/", "/publico", "/login", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin((form) -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/privado", true)
+                        .defaultSuccessUrl("/privado", true) // Mantiene el idioma tras iniciar sesión
                         .permitAll()
                 )
                 .logout((logout) -> logout
-                        .logoutSuccessUrl("/")
+                        .logoutSuccessUrl("/?lang=en") // Redirige a la página principal manteniendo el idioma
                         .permitAll());
 
         return http.build();
