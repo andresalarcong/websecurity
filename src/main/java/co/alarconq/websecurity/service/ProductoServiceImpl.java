@@ -9,25 +9,36 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
-
     @Autowired
     private ProductoRepository productoRepository;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Mono<Producto> guardarProducto(Producto producto) {
         return productoRepository.save(producto);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Flux<Producto> listarProductos() {
         return productoRepository.findAll();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Mono<Producto> obtenerProductoPorId(Long id) {
         return productoRepository.findById(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Mono<Producto> actualizarProducto(Long id, Producto producto) {
         return productoRepository.findById(id)
@@ -38,6 +49,9 @@ public class ProductoServiceImpl implements ProductoService {
                 });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Mono<Void> eliminarProducto(Long id) {
         return productoRepository.deleteById(id);

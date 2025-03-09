@@ -18,7 +18,12 @@ import java.net.URI;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
-
+    /**
+     * Configura la seguridad para endpoints de API.
+     *
+     * @param http configuración de seguridad HTTP
+     * @return cadena de filtros de seguridad configurada
+     */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityWebFilterChain apiSecurityFilterChain(ServerHttpSecurity http) {
@@ -36,6 +41,12 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * Configura la seguridad para la aplicación web.
+     *
+     * @param http configuración de seguridad HTTP
+     * @return cadena de filtros de seguridad configurada
+     */
     @Bean
     public SecurityWebFilterChain webSecurityFilterChain(ServerHttpSecurity http) {
         return http
@@ -45,7 +56,6 @@ public class SecurityConfig {
                         .anyExchange().authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        // No sobreescribimos el authenticationEntryPoint para que redirija a /login
                         .accessDeniedHandler((exchange, denied) -> {
                             exchange.getResponse().setStatusCode(HttpStatus.FOUND);
                             exchange.getResponse().getHeaders().setLocation(

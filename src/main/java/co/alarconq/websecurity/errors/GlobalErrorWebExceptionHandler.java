@@ -27,6 +27,15 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
 
     private final LocaleMessageService localeMessageService;
 
+    /**
+     * Constructor con inyección de dependencias.
+     *
+     * @param errorAttributes atributos de error
+     * @param resources recursos web
+     * @param applicationContext contexto de aplicación
+     * @param serverCodecConfigurer configurador de códec de servidor
+     * @param localeMessageService servicio para obtener mensajes internacionalizados
+     */
     public GlobalErrorWebExceptionHandler(ErrorAttributes errorAttributes,
                                           WebProperties.Resources resources,
                                           ApplicationContext applicationContext,
@@ -38,11 +47,23 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
         this.localeMessageService = localeMessageService;
     }
 
+    /**
+     * Define la función de enrutamiento para manejar errores.
+     *
+     * @param errorAttributes atributos de error
+     * @return función de enrutamiento configurada
+     */
     @Override
     protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
         return RouterFunctions.route(RequestPredicates.all(), this::renderErrorResponse);
     }
 
+    /**
+     * Renderiza la respuesta de error adecuada (JSON para API, HTML para web).
+     *
+     * @param request solicitud del servidor
+     * @return respuesta del servidor con información de error
+     */
     private Mono<ServerResponse> renderErrorResponse(ServerRequest request) {
         Map<String, Object> errorPropertiesMap = getErrorAttributes(request, ErrorAttributeOptions.defaults());
         Throwable error = getError(request);

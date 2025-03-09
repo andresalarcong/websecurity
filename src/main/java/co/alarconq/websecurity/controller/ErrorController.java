@@ -15,10 +15,22 @@ public class ErrorController {
 
     private final LocaleMessageService localeMessageService;
 
+    /**
+     * Constructor con inyección de dependencias.
+     *
+     * @param localeMessageService servicio para obtener mensajes internacionalizados
+     */
     public ErrorController(LocaleMessageService localeMessageService) {
         this.localeMessageService = localeMessageService;
     }
 
+    /**
+     * Maneja errores 404 (No encontrado).
+     *
+     * @param exchange intercambio de servidor
+     * @param model modelo para pasar datos a la vista
+     * @return vista de error personalizada
+     */
     @GetMapping("/404")
     public Mono<String> handle404Error(ServerWebExchange exchange, Model model) {
         return prepareErrorModel(exchange, model, HttpStatus.NOT_FOUND);
@@ -44,6 +56,14 @@ public class ErrorController {
         return prepareErrorModel(exchange, model, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Prepara el modelo para la vista de error.
+     *
+     * @param exchange intercambio de servidor
+     * @param model modelo para pasar datos a la vista
+     * @param status código de estado HTTP
+     * @return nombre de la vista de error
+     */
     private Mono<String> prepareErrorModel(ServerWebExchange exchange, Model model, HttpStatus status) {
         model.addAttribute("status", status.value());
         model.addAttribute("error", status.getReasonPhrase());

@@ -7,5 +7,11 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface UsuarioRepository extends ReactiveCrudRepository<Usuario, Long> {
+    /**
+     * Busca un usuario por su nombre de usuario.
+     *
+     * @param username nombre de usuario a buscar
+     * @return usuario encontrado o empty si no existe
+     */
     Mono<Usuario> findByUsername(String username);
 }

@@ -17,7 +17,6 @@ import java.util.Locale;
 
 @Configuration
 public class LocaleConfig implements WebFluxConfigurer {
-
     private static final List<Locale> SUPPORTED_LOCALES = List.of(
             Locale.ENGLISH,
             new Locale("es"),
@@ -25,6 +24,11 @@ public class LocaleConfig implements WebFluxConfigurer {
     );
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
+    /**
+     * Configura la fuente de mensajes internacionalizados.
+     *
+     * @return fuente de mensajes configurada
+     */
     @Bean
     public MessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
@@ -34,6 +38,11 @@ public class LocaleConfig implements WebFluxConfigurer {
         return messageSource;
     }
 
+    /**
+     * Configura el resolvedor de contexto de localización.
+     *
+     * @return resolvedor de contexto de localización
+     */
     @Bean
     public LocaleContextResolver localeContextResolver() {
         return new LocaleContextResolver() {
@@ -55,11 +64,16 @@ public class LocaleConfig implements WebFluxConfigurer {
 
             @Override
             public void setLocaleContext(ServerWebExchange exchange, LocaleContext localeContext) {
-                // No necesitamos implementar este método
+                // No se requiere implementación
             }
         };
     }
 
+    /**
+     * Filtro web para procesar el contexto de localización.
+     *
+     * @return filtro web configurado
+     */
     @Bean
     public WebFilter localeWebFilter() {
         return (ServerWebExchange exchange, WebFilterChain chain) -> {

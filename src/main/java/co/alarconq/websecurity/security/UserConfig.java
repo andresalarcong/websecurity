@@ -13,23 +13,36 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 public class UserConfig {
-
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Constructor con inyección de dependencias.
+     *
+     * @param usuarioRepository repositorio de usuarios
+     * @param passwordEncoder codificador de contraseñas
+     */
     public UserConfig(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Configura el servicio de detalles de usuario reactivo.
+     *
+     * @param databaseUserDetailsService servicio personalizado de detalles de usuario
+     * @return servicio de detalles de usuario reactivo
+     */
     @Bean
     public ReactiveUserDetailsService reactiveUserDetailsService(DatabaseUserDetailsService databaseUserDetailsService) {
         return databaseUserDetailsService;
     }
 
+    /**
+     * Inicializa un usuario por defecto cuando arranca la aplicación.
+     */
     @EventListener(ApplicationReadyEvent.class)
     public void inicializarUsuarios() {
-        // Inicializar usuario por defecto si no existe ninguno
         usuarioRepository.count()
                 .flatMap(count -> {
                     if (count == 0) {

@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 public class Usuario implements UserDetails {
-
     @Id
     private Long id;
 
@@ -35,6 +34,11 @@ public class Usuario implements UserDetails {
     private boolean accountNonLocked;
     private boolean credentialsNonExpired;
 
+    /**
+     * Obtiene las autoridades (roles) del usuario.
+     *
+     * @return colección de autoridades
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         String[] rolesArray = roles.split(",");

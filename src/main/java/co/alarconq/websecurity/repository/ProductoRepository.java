@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductoRepository extends ReactiveCrudRepository<Producto, Long> {
+    // Hereda métodos CRUD reactivos básicos
 }
