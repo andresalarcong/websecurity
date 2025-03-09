@@ -2,48 +2,51 @@ package co.alarconq.websecurity.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
+import reactor.core.publisher.Mono;
+
+import java.net.URI;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebFluxSecurity
 public class SecurityConfig {
 
     @Bean
-    @Order(1) // Mayor prioridad para las APIs
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/api/**") // Solo aplica a rutas /api/**
-                .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/api/productos/**").permitAll() // Permite acceso a la API de productos
-                        .anyRequest().authenticated()
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public SecurityWebFilterChain apiSecurityFilterChain(ServerHttpSecurity http) {
+        return http
+                .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/api/**"))
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/productos/**").permitAll()
+                        .anyExchange().authenticated()
                 )
-                .csrf((csrf) -> csrf
-                        .ignoringRequestMatchers("/api/productos/**")); // Desactiva CSRF para la API de productos
-
-        return http.build();
+                .csrf(csrf -> csrf.disable())
+                .build();
     }
 
     @Bean
-    @Order(2) // Menor prioridad para el resto de la aplicación web
-    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/**") // Aplica al resto de rutas
-                .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "/publico", "/login", "/css/**", "/js/**").permitAll()
-                        .anyRequest().authenticated()
+    public SecurityWebFilterChain webSecurityFilterChain(ServerHttpSecurity http) {
+        return http
+                .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/**"))
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/", "/publico", "/login", "/css/**", "/js/**").permitAll()
+                        .anyExchange().authenticated()
                 )
-                .formLogin((form) -> form
+                .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/privado", true)
-                        .permitAll()
                 )
-                .logout((logout) -> logout
-                        .logoutSuccessUrl("/?lang=en")
-                        .permitAll());
-
-        return http.build();
+                .logout(logout -> logout
+                        .logoutSuccessHandler((exchange, authentication) -> {
+                            exchange.getExchange().getResponse().setStatusCode(org.springframework.http.HttpStatus.FOUND);
+                            exchange.getExchange().getResponse().getHeaders().setLocation(URI.create("/?lang=en"));
+                            return Mono.empty();
+                        })
+                )
+                .build();
     }
 }

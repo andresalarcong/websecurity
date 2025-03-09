@@ -4,46 +4,57 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.i18n.CookieLocaleResolver;
-import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import org.springframework.web.server.i18n.AcceptHeaderLocaleContextResolver;
+import org.springframework.web.server.i18n.LocaleContextResolver;
 
+import java.util.List;
 import java.util.Locale;
 
 @Configuration
-public class LocaleConfig implements WebMvcConfigurer {
+public class LocaleConfig implements WebFluxConfigurer {
+
+    private static final List<Locale> SUPPORTED_LOCALES = List.of(Locale.ENGLISH, new Locale("es"), new Locale("fr"));
+    private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+
 
     @Bean
     public MessageSource messageSource() {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-        messageSource.setBasename("classpath:messages"); // No uses ".properties"
-        messageSource.setDefaultEncoding("UTF-8"); // Forzar UTF-8
-        messageSource.setUseCodeAsDefaultMessage(false); // Asegurar que muestra los textos correctos
+        messageSource.setBasename("classpath:messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setUseCodeAsDefaultMessage(false);
         return messageSource;
     }
 
     @Bean
-    public LocaleResolver localeResolver() {
-        CookieLocaleResolver localeResolver = new CookieLocaleResolver();
-        localeResolver.setDefaultLocale(Locale.ENGLISH); // Idioma por defecto
-        localeResolver.setCookieName("lang"); // Guardar el idioma en una cookie
-        localeResolver.setCookieMaxAge(86400); // Mantener idioma por 1 día (en segundos)
-        return localeResolver;
+    public LocaleContextResolver localeContextResolver() {
+        AcceptHeaderLocaleContextResolver resolver = new AcceptHeaderLocaleContextResolver();
+        resolver.setDefaultLocale(Locale.ENGLISH);
+        resolver.setSupportedLocales(List.of(Locale.ENGLISH, new Locale("es"), new Locale("fr")));
+        return resolver;
     }
-
 
     @Bean
-    public LocaleChangeInterceptor localeChangeInterceptor() {
-        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
-        interceptor.setParamName("lang"); // Cambia el idioma con ?lang=es o ?lang=en
-        return interceptor;
-    }
+    public WebFilter localeChangeFilter() {
+        return (ServerWebExchange exchange, WebFilterChain chain) -> {
+            String langParam = exchange.getRequest().getQueryParams().getFirst("lang");
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(localeChangeInterceptor()); // Registrar el interceptor
-    }
+            Locale selectedLocale = DEFAULT_LOCALE;
+            if (langParam != null) {
+                Locale requestedLocale = Locale.forLanguageTag(langParam);
+                if (SUPPORTED_LOCALES.contains(requestedLocale)) {
+                    selectedLocale = requestedLocale;
+                }
+            }
 
+            // Store the locale in request attributes
+            exchange.getAttributes().put("locale", selectedLocale);
+
+            return chain.filter(exchange);
+        };
+    }
 }

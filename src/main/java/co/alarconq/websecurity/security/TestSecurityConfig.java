@@ -2,22 +2,26 @@ package co.alarconq.websecurity.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 
 @Configuration
+@EnableWebFluxSecurity
+@Profile("test")
 public class TestSecurityConfig {
 
     @Bean
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers("/api/productos").permitAll() // Permite el acceso sin autenticación a /api/productos
-                                .anyRequest().authenticated() // Requiere autenticación para otras rutas
+    public SecurityWebFilterChain testSecurityFilterChain(ServerHttpSecurity http) {
+        return http
+                .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/**"))
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/productos/**").permitAll()
+                        .anyExchange().authenticated()
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/productos")); // Ignora la protección CSRF para /api/productos
-
-        return http.build();
+                .csrf(csrf -> csrf.disable())
+                .build();
     }
 }

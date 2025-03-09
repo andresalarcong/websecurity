@@ -4,9 +4,8 @@ import co.alarconq.websecurity.domain.Producto;
 import co.alarconq.websecurity.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -15,33 +14,32 @@ public class ProductoServiceImpl implements ProductoService {
     private ProductoRepository productoRepository;
 
     @Override
-    public Producto guardarProducto(Producto producto) {
+    public Mono<Producto> guardarProducto(Producto producto) {
         return productoRepository.save(producto);
     }
 
     @Override
-    public List<Producto> listarProductos() {
+    public Flux<Producto> listarProductos() {
         return productoRepository.findAll();
     }
 
     @Override
-    public Optional<Producto> obtenerProductoPorId(Long id) {
+    public Mono<Producto> obtenerProductoPorId(Long id) {
         return productoRepository.findById(id);
     }
 
     @Override
-    public Producto actualizarProducto(Long id, Producto producto) {
+    public Mono<Producto> actualizarProducto(Long id, Producto producto) {
         return productoRepository.findById(id)
-                .map(p -> {
+                .flatMap(p -> {
                     p.setNombre(producto.getNombre());
                     p.setPrecio(producto.getPrecio());
                     return productoRepository.save(p);
-                })
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                });
     }
 
     @Override
-    public void eliminarProducto(Long id) {
-        productoRepository.deleteById(id);
+    public Mono<Void> eliminarProducto(Long id) {
+        return productoRepository.deleteById(id);
     }
 }

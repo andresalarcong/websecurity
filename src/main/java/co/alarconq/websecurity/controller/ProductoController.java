@@ -1,13 +1,13 @@
 package co.alarconq.websecurity.controller;
 
-
 import co.alarconq.websecurity.domain.Producto;
 import co.alarconq.websecurity.service.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -17,30 +17,33 @@ public class ProductoController {
     private ProductoService productoService;
 
     @PostMapping
-    public ResponseEntity<Producto> agregarProducto(@RequestBody Producto producto) {
-        return ResponseEntity.ok(productoService.guardarProducto(producto));
+    public Mono<ResponseEntity<Producto>> agregarProducto(@Valid @RequestBody Producto producto) {
+        return productoService.guardarProducto(producto)
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping
-    public ResponseEntity<List<Producto>> listarProductos() {
-        return ResponseEntity.ok(productoService.listarProductos());
+    public Flux<Producto> listarProductos() {
+        return productoService.listarProductos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> obtenerProducto(@PathVariable Long id) {
+    public Mono<ResponseEntity<Producto>> obtenerProducto(@PathVariable Long id) {
         return productoService.obtenerProductoPorId(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id, @RequestBody Producto producto) {
-        return ResponseEntity.ok(productoService.actualizarProducto(id, producto));
+    public Mono<ResponseEntity<Producto>> actualizarProducto(@PathVariable Long id, @Valid @RequestBody Producto producto) {
+        return productoService.actualizarProducto(id, producto)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
-        productoService.eliminarProducto(id);
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Void>> eliminarProducto(@PathVariable Long id) {
+        return productoService.eliminarProducto(id)
+                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 }

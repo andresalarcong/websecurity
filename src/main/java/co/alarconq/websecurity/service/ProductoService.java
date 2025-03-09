@@ -1,16 +1,13 @@
 package co.alarconq.websecurity.service;
 
-
-
 import co.alarconq.websecurity.domain.Producto;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface ProductoService {
-    Producto guardarProducto(Producto producto);
-    List<Producto> listarProductos();
-    Optional<Producto> obtenerProductoPorId(Long id);
-    Producto actualizarProducto(Long id, Producto producto);
-    void eliminarProducto(Long id);
+    Mono<Producto> guardarProducto(Producto producto);
+    Flux<Producto> listarProductos();
+    Mono<Producto> obtenerProductoPorId(Long id);
+    Mono<Producto> actualizarProducto(Long id, Producto producto);
+    Mono<Void> eliminarProducto(Long id);
 }

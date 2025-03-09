@@ -5,6 +5,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 
@@ -15,7 +16,7 @@ public class SaludoController {
     private MessageSource messageSource;
 
     @GetMapping("/saludo")
-    public String obtenerSaludo(Locale locale) {
-        return messageSource.getMessage("saludo", null, locale);
+    public Mono<String> obtenerSaludo(Locale locale) {
+        return Mono.just(messageSource.getMessage("saludo", null, locale));
     }
 }

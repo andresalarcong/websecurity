@@ -1,128 +1,125 @@
 package co.alarconq.websecurity;
 
 import co.alarconq.websecurity.domain.Producto;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
+import co.alarconq.websecurity.repository.ProductoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProductoControllerTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private ProductoRepository productoRepository;
+
+    @BeforeEach
+    void setUp() {
+        // Clean the repository before each test
+        StepVerifier.create(productoRepository.deleteAll()).verifyComplete();
+    }
 
     @Test
-    void cuandoAgregarProducto_entoncesDebeRetornarProductoCreado() throws Exception {
+    void cuandoAgregarProducto_entoncesDebeRetornarProductoCreado() {
         Producto producto = new Producto();
         producto.setNombre("Producto 1");
         producto.setPrecio(100.0);
 
-        mockMvc.perform(post("/api/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(producto)))
-                .andExpect(status().isOk()) // Esperamos un estado 200 OK
-                .andExpect(jsonPath("$.nombre").value("Producto 1"))
-                .andExpect(jsonPath("$.precio").value(100.0));
+        webTestClient.post().uri("/api/productos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(producto), Producto.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.nombre").isEqualTo("Producto 1")
+                .jsonPath("$.precio").isEqualTo(100.0);
     }
 
     @Test
-    void cuandoListarProductos_entoncesDebeRetornarListaDeProductos() throws Exception {
-        mockMvc.perform(get("/api/productos"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].nombre").exists())
-                .andExpect(jsonPath("$[0].precio").exists());
+    void cuandoListarProductos_entoncesDebeRetornarListaDeProductos() {
+        // Add test data
+        Producto producto = new Producto();
+        producto.setNombre("Producto Test");
+        producto.setPrecio(150.0);
+
+        StepVerifier.create(productoRepository.save(producto))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        webTestClient.get().uri("/api/productos")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Producto.class);
     }
 
     @Test
-    void cuandoObtenerProductoPorId_entoncesDebeRetornarProducto() throws Exception {
-        // Primero, agregamos un producto para que exista en la base de datos.
+    void cuandoObtenerProductoPorId_entoncesDebeRetornarProducto() {
         Producto producto = new Producto();
         producto.setNombre("Producto 2");
         producto.setPrecio(200.0);
 
-        String json = objectMapper.writeValueAsString(producto);
-        String response = mockMvc.perform(post("/api/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        // Save product and get its ID
+        Long savedProductId = productoRepository.save(producto)
+                .map(Producto::getId)
+                .block();
 
-        Long productoId = Long.parseLong(JsonPath.read(response, "$.id").toString());
-
-        mockMvc.perform(get("/api/productos/{id}", productoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Producto 2"))
-                .andExpect(jsonPath("$.precio").value(200.0));
+        webTestClient.get().uri("/api/productos/{id}", savedProductId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.nombre").isEqualTo("Producto 2")
+                .jsonPath("$.precio").isEqualTo(200.0);
     }
 
     @Test
-    void cuandoActualizarProducto_entoncesDebeRetornarProductoActualizado() throws Exception {
-        // Primero, agregamos un producto
+    void cuandoActualizarProducto_entoncesDebeRetornarProductoActualizado() {
         Producto producto = new Producto();
         producto.setNombre("Producto 3");
         producto.setPrecio(150.0);
 
-        String json = objectMapper.writeValueAsString(producto);
-        String response = mockMvc.perform(post("/api/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        // Save product and get saved product
+        Producto savedProducto = productoRepository.save(producto).block();
 
-        Long productoId = Long.parseLong(JsonPath.read(response, "$.id").toString());
-        // Ahora actualizamos el producto
-        producto.setNombre("Producto 3 actualizado");
-        producto.setPrecio(180.0);
+        Producto updatedProducto = new Producto();
+        updatedProducto.setId(savedProducto.getId());
+        updatedProducto.setNombre("Producto 3 actualizado");
+        updatedProducto.setPrecio(180.0);
 
-        mockMvc.perform(put("/api/productos/{id}", productoId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(producto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Producto 3 actualizado"))
-                .andExpect(jsonPath("$.precio").value(180.0));
+        webTestClient.put().uri("/api/productos/{id}", savedProducto.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(updatedProducto), Producto.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.nombre").isEqualTo("Producto 3 actualizado")
+                .jsonPath("$.precio").isEqualTo(180.0);
     }
 
     @Test
-    void cuandoEliminarProducto_entoncesDebeRetornarNoContent() throws Exception {
-        // Primero, agregamos un producto
+    void cuandoEliminarProducto_entoncesDebeRetornarNoContent() {
         Producto producto = new Producto();
         producto.setNombre("Producto 4");
         producto.setPrecio(250.0);
 
-        String json = objectMapper.writeValueAsString(producto);
-        String response = mockMvc.perform(post("/api/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        // Save product and get its ID
+        Long savedProductId = productoRepository.save(producto)
+                .map(Producto::getId)
+                .block();
 
-        Long productoId = Long.parseLong(JsonPath.read(response, "$.id").toString());
-        // Ahora eliminamos el producto
-        mockMvc.perform(delete("/api/productos/{id}", productoId))
-                .andExpect(status().isNoContent());
+        webTestClient.delete().uri("/api/productos/{id}", savedProductId)
+                .exchange()
+                .expectStatus().isNoContent();
 
-        // Verificamos que el producto ha sido eliminado
-        mockMvc.perform(get("/api/productos/{id}", productoId))
-                .andExpect(status().isNotFound());
+        // Verify product no longer exists
+        webTestClient.get().uri("/api/productos/{id}", savedProductId)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }
