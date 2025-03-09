@@ -1,22 +1,24 @@
 package co.alarconq.websecurity.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
+import co.alarconq.websecurity.i18n.LocaleMessageService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/api")
 public class SaludoController {
-    @Autowired
-    private MessageSource messageSource;
+
+    private final LocaleMessageService localeMessageService;
+
+    public SaludoController(LocaleMessageService localeMessageService) {
+        this.localeMessageService = localeMessageService;
+    }
 
     @GetMapping("/saludo")
-    public Mono<String> obtenerSaludo(Locale locale) {
-        return Mono.just(messageSource.getMessage("saludo", null, locale));
+    public Mono<String> obtenerSaludo(ServerWebExchange exchange) {
+        return localeMessageService.getMessage("saludo", exchange);
     }
 }

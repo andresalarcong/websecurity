@@ -1,3 +1,4 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
@@ -20,6 +21,7 @@
     <select name="lang" onchange="this.form.submit()">
         <option value="en" th:selected="${#locale.language == 'en'}">English</option>
         <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+        <option value="fr" th:selected="${#locale.language == 'fr'}">Français</option>
     </select>
 </form>
 

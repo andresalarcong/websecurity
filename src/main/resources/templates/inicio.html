@@ -1,3 +1,4 @@
+<!-- inicio.html -->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org"
@@ -10,20 +11,21 @@
 <h1 th:text="#{welcome.message}">Bienvenido</h1>
 
 <!-- Selector de idioma -->
-<form method="get" th:action="@{''}">
+<form method="get" th:action="@{/}">
     <select name="lang" onchange="this.form.submit()">
         <option value="en" th:selected="${#locale.language == 'en'}">English</option>
         <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+        <option value="fr" th:selected="${#locale.language == 'fr'}">Français</option>
     </select>
 </form>
 
 <nav>
     <ul>
-        <li><a th:href="@{/publico}" th:text="#{public.content}">Contenido Público</a></li>
-        <li><a th:href="@{/privado}" th:text="#{private.content}">Contenido Privado</a></li>
+        <li><a th:href="@{/publico(lang=${#locale.language})}" th:text="#{public.content}">Contenido Público</a></li>
+        <li><a th:href="@{/privado(lang=${#locale.language})}" th:text="#{private.content}">Contenido Privado</a></li>
 
         <li sec:authorize="isAnonymous()">
-            <a th:href="@{/login}" th:text="#{login.button}">Iniciar Sesión</a>
+            <a th:href="@{/login(lang=${#locale.language})}" th:text="#{login.button}">Iniciar Sesión</a>
         </li>
 
         <li sec:authorize="isAuthenticated()">
