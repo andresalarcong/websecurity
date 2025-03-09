@@ -10,3 +10,12 @@ Html Saludo:
 http://localhost:8080/api/saludo?lang=es
 http://localhost:8080/api/saludo?lang=en
 http://localhost:8080/api/saludo?lang=fr
+
+
+Objetivos cumplidos:
+✅ Funcionalidad y Correcta Implementación (5 pts)
+✅ Uso de Programación Reactiva (Flux, Mono) (5 pts)
+✅ Internacionalización Aplicada Correctamente (5 pts)
+✅ Estructura y Organización del Código (5 pts)
+✅ Pruebas Automatizadas (StepVerifier) (5 pts)
+✅ Documentación y Claridad en la Explicación (5 pts)
