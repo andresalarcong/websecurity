@@ -4,9 +4,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
+import org.springframework.security.web.server.authorization.HttpStatusServerAccessDeniedHandler;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import reactor.core.publisher.Mono;
 
@@ -25,6 +28,10 @@ public class SecurityConfig {
                         .pathMatchers("/api/productos/**").permitAll()
                         .anyExchange().authenticated()
                 )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler(new HttpStatusServerAccessDeniedHandler(HttpStatus.FORBIDDEN))
+                )
                 .csrf(csrf -> csrf.disable())
                 .build();
     }
@@ -34,16 +41,28 @@ public class SecurityConfig {
         return http
                 .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/**"))
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/", "/publico", "/login", "/css/**", "/js/**").permitAll()
+                        .pathMatchers("/", "/publico", "/login", "/css/**", "/js/**", "/error/**").permitAll()
                         .anyExchange().authenticated()
+                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        // No sobreescribimos el authenticationEntryPoint para que redirija a /login
+                        .accessDeniedHandler((exchange, denied) -> {
+                            exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+                            exchange.getResponse().getHeaders().setLocation(
+                                    URI.create("/error/403?lang=" +
+                                            exchange.getRequest().getQueryParams().getFirst("lang")));
+                            return Mono.empty();
+                        })
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                 )
                 .logout(logout -> logout
                         .logoutSuccessHandler((exchange, authentication) -> {
-                            exchange.getExchange().getResponse().setStatusCode(org.springframework.http.HttpStatus.FOUND);
-                            exchange.getExchange().getResponse().getHeaders().setLocation(URI.create("/?lang=en"));
+                            exchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
+                            String lang = exchange.getExchange().getRequest().getQueryParams().getFirst("lang");
+                            if (lang == null) lang = "en";
+                            exchange.getExchange().getResponse().getHeaders().setLocation(URI.create("/?lang=" + lang));
                             return Mono.empty();
                         })
                 )
