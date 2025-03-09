@@ -1,4 +1,4 @@
-package co.alarconq.websecurity.i18n;
+package co.alarconq.websecurity.service;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContext;
@@ -35,7 +35,7 @@ public class LocaleMessageService {
     public Mono<String> getMessage(String code, ServerWebExchange exchange) {
         LocaleContext localeContext = localeContextResolver.resolveLocaleContext(exchange);
         Locale locale = localeContext.getLocale();
-        return Mono.just(messageSource.getMessage(code, null, locale));
+        return Mono.just(messageSource.getMessage(code, null, locale != null ? locale : Locale.getDefault()));
     }
 
     /**
@@ -56,6 +56,6 @@ public class LocaleMessageService {
      * @return mensaje traducido
      */
     public String getMessageSync(String code, Locale locale) {
-        return messageSource.getMessage(code, null, locale);
+        return messageSource.getMessage(code, null, locale != null ? locale : Locale.getDefault());
     }
 }

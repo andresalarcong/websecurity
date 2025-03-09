@@ -12,8 +12,12 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
-    @Autowired
-    private ProductoService productoService;
+
+    private final ProductoService productoService;
+
+    public ProductoController(ProductoService productoService) {
+        this.productoService = productoService;
+    }
 
     /**
      * Crea un nuevo producto.

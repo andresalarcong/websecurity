@@ -9,8 +9,12 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
-    @Autowired
-    private ProductoRepository productoRepository;
+
+    private final ProductoRepository productoRepository;
+
+    public ProductoServiceImpl(ProductoRepository productoRepository) {
+        this.productoRepository = productoRepository;
+    }
 
     /**
      * {@inheritDoc}

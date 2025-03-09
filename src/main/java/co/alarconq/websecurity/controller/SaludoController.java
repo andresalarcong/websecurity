@@ -1,6 +1,6 @@
 package co.alarconq.websecurity.controller;
 
-import co.alarconq.websecurity.i18n.LocaleMessageService;
+import co.alarconq.websecurity.service.LocaleMessageService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
