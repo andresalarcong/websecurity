@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.server.*;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -76,14 +77,27 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
         }
 
         // Si es una solicitud web, renderizar una vista HTML
+        // Usamos HashMap mutable en lugar de Map.of() para evitar NPE con valores nulos
+        Map<String, Object> model = new HashMap<>();
+        model.put("status", status.value());
+        model.put("error", status.getReasonPhrase());
+
+        // Manejo seguro de posibles valores nulos
+        String errorMessage = errorPropertiesMap.get("message") != null
+                ? errorPropertiesMap.get("message").toString()
+                : "No additional information available";
+        model.put("errorMessage", errorMessage);
+
+        model.put("path", request.path());
+
+        // Agregamos atributos para la internacionalización
+        // Estos se completarán más adelante en el flujo
+        model.put("errorTitle", status.getReasonPhrase());
+        model.put("returnText", "Return to Home Page");
+
         return ServerResponse.status(status)
                 .contentType(MediaType.TEXT_HTML)
-                .render("error", Map.of(
-                        "status", status.value(),
-                        "error", status.getReasonPhrase(),
-                        "message", errorPropertiesMap.get("message"),
-                        "path", request.path()
-                ));
+                .render("error", model);
     }
 
     private HttpStatus determineHttpStatus(Throwable error) {
